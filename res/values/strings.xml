@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">prjDragDemo</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    
+    <string-array name="my_array">
+        <item>START</item>
+        <item>1111</item>
+        <item>2222</item>
+        <item>3333</item>
+        <item>4444</item>
+        <item>5555</item>
+        <item>6666</item>
+        <item>7777</item>
+        <item>8888</item>
+        <item>9999</item>
+        <item>0000</item>
+        
+        <item>1111</item>
+        <item>2222</item>
+        <item>3333</item>
+        <item>4444</item>
+        <item>5555</item>
+        <item>6666</item>
+        <item>7777</item>
+        <item>8888</item>
+        <item>9999</item>
+        <item>0000</item>
+        <item>END</item>
+        
+    </string-array>
+
+</resources>
