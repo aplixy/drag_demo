@@ -123,6 +123,10 @@ public class DragLinerLayout extends LinearLayout {
 	
 	//private boolean mIsChildMove;
 	
+	private boolean mIsChanged;
+	
+	
+	
 	/**
 	 * Callback interface for responding to changing state of the selected page.
 	 */
@@ -364,7 +368,7 @@ public class DragLinerLayout extends LinearLayout {
 				mLastMotionX = x;
 				setScrollingCacheEnabled(true);
 				
-			} else {
+			} else if (!mIsChanged){
 				mIsBeingDragged = false;
 				if (xDiff > mTouchSlop) {
 					mIsUnableToDrag = true;
@@ -373,8 +377,9 @@ public class DragLinerLayout extends LinearLayout {
 			
 			break;
 			
-		case MotionEvent.ACTION_UP:
-			break;
+//		case MotionEvent.ACTION_UP:
+//			mIsChanged = false;
+//			break;
 			
 		case MotionEventCompat.ACTION_POINTER_UP:
 			onSecondaryPointerUp(ev);
@@ -392,6 +397,8 @@ public class DragLinerLayout extends LinearLayout {
 			}
 			
 			completeScroll();
+			
+			mIsChanged = false;
 			
 			return true;
 			//break;
@@ -412,19 +419,29 @@ public class DragLinerLayout extends LinearLayout {
 	
 	private void changeTouchEventToMy(MotionEvent ev) {
 		Log.d(TAG, "changeTouchEventToMy");
-		ev.setAction(MotionEvent.ACTION_CANCEL);
-		mContentViewGroup.dispatchTouchEvent(ev);
+		
+		if (!mIsChanged) {
+			MotionEvent event1 = MotionEvent.obtain(ev);
+			event1.setAction(MotionEvent.ACTION_CANCEL);
+			mContentViewGroup.dispatchTouchEvent(event1);
+			event1.recycle();
 
-		MotionEvent event = MotionEvent.obtain(ev);
-		event.setLocation(ev.getX(), ev.getY());
-		event.setAction(MotionEvent.ACTION_DOWN);
-		this.dispatchTouchEvent(event);
-		event.recycle();
+			mIsBeingDragged = true;
+			setScrollState(SCROLL_STATE_SETTLING);
+			
+			MotionEvent event = MotionEvent.obtain(ev);
+			event.setLocation(ev.getX(), ev.getY());
+			event.setAction(MotionEvent.ACTION_DOWN);
+			this.dispatchTouchEvent(event);
+			event.recycle();
+			
+			mIsChanged = true;
+		}
+		
 	}
 
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
-		
 		
 
 		if (getChildCount() < 1) {
@@ -439,9 +456,10 @@ public class DragLinerLayout extends LinearLayout {
 		final int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
 		
 		Log.i(TAG, "###onInterceptTouchEvent--->" + action);
+		Log.v(TAG, "###onInterceptTouchEvent--->mIsBeingDragged--->" + mIsBeingDragged);
 
 		// Always take care of the touch gesture being complete.
-		if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+		if (/*action == MotionEvent.ACTION_CANCEL || */action == MotionEvent.ACTION_UP) {
 			// Release the drag.
 			
 			Log.d(TAG, "###onInterceptTouchEvent--->Release the drag");
