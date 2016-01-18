@@ -42,6 +42,7 @@ public class DragLinerLayout extends LinearLayout {
 			return t * t * t + 1.0f;
 		}
 	};
+	
 
 	private final ArrayList<ItemInfo> mItems = new ArrayList<ItemInfo>();
 
