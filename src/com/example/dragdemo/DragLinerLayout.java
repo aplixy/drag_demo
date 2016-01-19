@@ -53,7 +53,7 @@ public class DragLinerLayout extends LinearLayout {
 
 	private boolean mIsBeingDragged;
 
-	private boolean mIsUnableToDrag;
+	//private boolean mIsUnableToDrag;
 	
 	//private boolean mIsInterceptDown;
 
@@ -104,7 +104,7 @@ public class DragLinerLayout extends LinearLayout {
 	 */
 	public static final int SCROLL_STATE_SETTLING = 2;
 
-	private int mScrollState = SCROLL_STATE_SETTLING;
+	//private int mScrollState = SCROLL_STATE_SETTLING;
 	
 	
 	
@@ -123,7 +123,8 @@ public class DragLinerLayout extends LinearLayout {
 	
 	//private boolean mIsChildMove;
 	
-	private boolean mIsChanged;
+	private boolean mIsChangedToMe;
+	private boolean mIsChangedToChild;
 	
 	
 	
@@ -198,14 +199,6 @@ public class DragLinerLayout extends LinearLayout {
 		mContentViewGroup.addView(contentView);
 	}
 
-	private void setScrollState(int newState) {
-		if (mScrollState == newState) {
-			return;
-		}
-		Log.e(TAG, "设置mScrollState--->" + newState);
-		mScrollState = newState;
-	}
-
 	/**
 	 * Set a listener that will be invoked whenever the page changes or is
 	 * incrementally scrolled. See {@link OnSlideListener}.
@@ -236,15 +229,6 @@ public class DragLinerLayout extends LinearLayout {
 		if (needPopulate) {
 			// Done with scroll, no longer want to cache view drawing.
 			setScrollingCacheEnabled(false);
-			//mScroller.abortAnimation();
-			//int oldX = getScrollX();
-			//int oldY = getScrollY();
-			//int x = mScroller.getCurrX();
-			//int y = mScroller.getCurrY();
-			//if (oldX != x || oldY != y) {
-			//	scrollTo(x, y);
-			//}
-			setScrollState(SCROLL_STATE_SETTLING);
 		}
 		mScrolling = false;
 		for (int i = 0; i < mItems.size(); i++) {
@@ -259,26 +243,17 @@ public class DragLinerLayout extends LinearLayout {
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		
-		boolean willIntercept = false;
+		
 		
 		int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
-		
-		//if (action == MotionEvent.ACTION_CANCEL) {
-		//	return false;
-		//}
-		
 		Log.v(TAG, "****dispatchTouchEvent--->" + action);
 		
-		//final int activePointerId = mActivePointerId;
-		
 		if (action != MotionEvent.ACTION_DOWN) {
-			if (mActivePointerId == INVALID_POINTER) {
+			if (mIsChangedToChild) {
 				mContentViewGroup.dispatchTouchEvent(ev);
-				
-				return willIntercept;
+				if (action != MotionEvent.ACTION_UP) return false;
 			}
 		}
-		
 		
 		switch (action) {
 		case MotionEvent.ACTION_DOWN:
@@ -290,24 +265,9 @@ public class DragLinerLayout extends LinearLayout {
 			mLastMotionY = ev.getY();
 			mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
 
-			if (mScrollState == SCROLL_STATE_SETTLING) {
-				mIsBeingDragged = true;
-				mIsUnableToDrag = false;
-				setScrollState(SCROLL_STATE_DRAGGING);
-				
-				if (mOnSlideListener != null) {
-					mOnSlideListener.onSlideStart(this);
-				}
-			} else {
-				completeScroll();
-				mIsBeingDragged = false;
-				mIsUnableToDrag = false;
-			}
-
 			break;
 			
 		case MotionEvent.ACTION_MOVE:
-			
 			
 			final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
 			final float x = MotionEventCompat.getX(ev, pointerIndex);
@@ -318,6 +278,8 @@ public class DragLinerLayout extends LinearLayout {
 			final float yDiff = Math.abs(dy);
 			
 			//Log.v(TAG, "yDiff--->" + yDiff + ", xDiff--->" + xDiff);
+			
+			boolean willIntercept = false;
 			
 			if (yDiff > mTouchSlop && yDiff > xDiff) {
 				//Log.d(TAG, "纵向滑, dy--->" + dy);
@@ -331,19 +293,22 @@ public class DragLinerLayout extends LinearLayout {
 						Log.i(TAG, "向上推，推到最上边了");
 						willIntercept = false;
 						changeTouchEventToChild(ev);
+						mIsChangedToMe = false;
 						return false;
 					}
 					
 				} else if (dy > 0) {// 向下拉
 					if (-lp.topMargin <= mHeaderHeight && -lp.topMargin > 0) {
 						//Log.d(TAG, "向下拉，并且没拉到头");
-						if (!canScroll(this, false, (int) dy, (int) x, (int) y)) {
-							//Log.w(TAG, "向下拉，子View不能动");
-							changeTouchEventToMy(ev);
-							willIntercept = true;
-						} else {
+						if (canScroll(this, false, (int) dy, (int) x, (int) y)) {
 							Log.i(TAG, "向下拉，子View可以滑动");
 							willIntercept = false;
+						} else {
+							//Log.w(TAG, "向下拉，子View不能动");
+							if (!mIsChangedToMe) {
+								changeTouchEventToMe(ev);
+							}
+							willIntercept = true;
 						}
 					} else if (lp.topMargin == 0) {
 						Log.d(TAG, "向下拉，全部拉下来了");
@@ -360,23 +325,16 @@ public class DragLinerLayout extends LinearLayout {
 			}
 			
 			if (willIntercept) {
+				Log.e(TAG, "-^-dispatch move置为true");
 				mIsBeingDragged = true;
-				setScrollState(SCROLL_STATE_DRAGGING);
 				mLastMotionX = x;
 				setScrollingCacheEnabled(true);
-				
-			} else if (!mIsChanged){
+			} else if (!mIsChangedToMe){
+				Log.w(TAG, "-^-dispatch move置为false");
 				mIsBeingDragged = false;
-				if (xDiff > mTouchSlop) {
-					mIsUnableToDrag = true;
-				}
 			}
 			
 			break;
-			
-//		case MotionEvent.ACTION_UP:
-//			mIsChanged = false;
-//			break;
 			
 		case MotionEventCompat.ACTION_POINTER_UP:
 			onSecondaryPointerUp(ev);
@@ -384,9 +342,8 @@ public class DragLinerLayout extends LinearLayout {
 
 		default:
 			Log.w(TAG, "****dispatchTouchEvent--->default");
-			
+			Log.w(TAG, "-^-dispatch default置为false");
 			mIsBeingDragged = false;
-			mIsUnableToDrag = false;
 			mActivePointerId = INVALID_POINTER;
 			if (mVelocityTracker != null) {
 				mVelocityTracker.recycle();
@@ -395,10 +352,11 @@ public class DragLinerLayout extends LinearLayout {
 			
 			completeScroll();
 			
-			mIsChanged = false;
+			mIsChangedToMe = false;
+			mIsChangedToChild = false;
 			
-			return true;
-			//break;
+			//return true;
+			break;
 		}
 		
 		
@@ -414,27 +372,23 @@ public class DragLinerLayout extends LinearLayout {
 		return super.dispatchTouchEvent(ev);
 	}
 	
-	private void changeTouchEventToMy(MotionEvent ev) {
-		Log.d(TAG, "changeTouchEventToMy");
+	private void changeTouchEventToMe(MotionEvent ev) {
+		Log.d(TAG, "changeTouchEventToMe");
 		
-		if (!mIsChanged) {
-			MotionEvent event1 = MotionEvent.obtain(ev);
-			event1.setAction(MotionEvent.ACTION_CANCEL);
-			mContentViewGroup.dispatchTouchEvent(event1);
-			event1.recycle();
+		MotionEvent event1 = MotionEvent.obtain(ev);
+		event1.setAction(MotionEvent.ACTION_CANCEL);
+		mContentViewGroup.dispatchTouchEvent(event1);
+		event1.recycle();
 
-			mIsBeingDragged = true;
-			setScrollState(SCROLL_STATE_SETTLING);
-			
-			MotionEvent event = MotionEvent.obtain(ev);
-			event.setLocation(ev.getX(), ev.getY());
-			event.setAction(MotionEvent.ACTION_DOWN);
-			this.dispatchTouchEvent(event);
-			event.recycle();
-			
-			mIsChanged = true;
-		}
 		
+		MotionEvent event = MotionEvent.obtain(ev);
+		event.setLocation(ev.getX(), ev.getY());
+		event.setAction(MotionEvent.ACTION_DOWN);
+		this.dispatchTouchEvent(event);
+		event.recycle();
+		
+		mIsChangedToChild = false;
+		mIsChangedToMe = true;
 	}
 
 	@Override
@@ -461,8 +415,9 @@ public class DragLinerLayout extends LinearLayout {
 			
 			Log.d(TAG, "###onInterceptTouchEvent--->Release the drag");
 			
+			Log.w(TAG, "-^-onIntercept UP置为false");
+			
 			mIsBeingDragged = false;
-			mIsUnableToDrag = false;
 			mActivePointerId = INVALID_POINTER;
 			if (mVelocityTracker != null) {
 				mVelocityTracker.recycle();
@@ -476,9 +431,6 @@ public class DragLinerLayout extends LinearLayout {
 		if (action != MotionEvent.ACTION_DOWN) {
 			if (mIsBeingDragged) {
 				return true;
-			}
-			if (mIsUnableToDrag) {
-				return false;
 			}
 		}
 
@@ -545,7 +497,6 @@ public class DragLinerLayout extends LinearLayout {
 
 		switch (action & MotionEventCompat.ACTION_MASK) {
 		case MotionEvent.ACTION_DOWN: {
-			Log.w(TAG, "+++onTouchEvent---DOWN--->");
 			/*
 			 * If being flinged and user touches, stop the fling. isFinished
 			 * will be false if being flinged.
@@ -558,7 +509,6 @@ public class DragLinerLayout extends LinearLayout {
 			break;
 		}
 		case MotionEvent.ACTION_MOVE:
-			Log.d(TAG, "+++onTouchEvent---MOVE");
 			
 			if (!mIsBeingDragged) {
 				final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
@@ -569,11 +519,11 @@ public class DragLinerLayout extends LinearLayout {
 				
 				if (yDiff > mTouchSlop && yDiff > xDiff) {
 					
+					Log.e(TAG, "-^-onTouch MOVE置为true");
 					mIsBeingDragged = true;
 					mLastMotionY = y;
 					
 					Log.e(TAG, "on touch move--->");
-					setScrollState(SCROLL_STATE_DRAGGING);
 					setScrollingCacheEnabled(true);
 				}
 			}
@@ -670,6 +620,8 @@ public class DragLinerLayout extends LinearLayout {
 		mContentViewGroup.dispatchTouchEvent(event);
 		event.recycle();
 		
+		mIsChangedToChild = true;
+		mIsChangedToMe = false;
 	}
 
 	private void onSecondaryPointerUp(MotionEvent ev) {
@@ -691,11 +643,9 @@ public class DragLinerLayout extends LinearLayout {
 		
 		Log.d(TAG, ">>>>endDrag");
 		
+		Log.w(TAG, "-^-end drag置为false");
 		mIsBeingDragged = false;
-		mIsUnableToDrag = false;
 		
-		setScrollState(SCROLL_STATE_SETTLING);
-
 		if (mVelocityTracker != null) {
 			mVelocityTracker.recycle();
 			mVelocityTracker = null;
