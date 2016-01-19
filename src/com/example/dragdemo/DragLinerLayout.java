@@ -259,23 +259,23 @@ public class DragLinerLayout extends LinearLayout {
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		
-		boolean intercept = false;
+		boolean willIntercept = false;
 		
 		int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
 		
-		if (action == MotionEvent.ACTION_CANCEL) {
-			return false;
-		}
+		//if (action == MotionEvent.ACTION_CANCEL) {
+		//	return false;
+		//}
 		
 		Log.v(TAG, "****dispatchTouchEvent--->" + action);
 		
-		final int activePointerId = mActivePointerId;
+		//final int activePointerId = mActivePointerId;
 		
 		if (action != MotionEvent.ACTION_DOWN) {
-			if (activePointerId == INVALID_POINTER) {
+			if (mActivePointerId == INVALID_POINTER) {
 				mContentViewGroup.dispatchTouchEvent(ev);
 				
-				return intercept;
+				return willIntercept;
 			}
 		}
 		
@@ -309,7 +309,7 @@ public class DragLinerLayout extends LinearLayout {
 		case MotionEvent.ACTION_MOVE:
 			
 			
-			final int pointerIndex = MotionEventCompat.findPointerIndex(ev, activePointerId);
+			final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
 			final float x = MotionEventCompat.getX(ev, pointerIndex);
 			final float dx = x - mLastMotionX;
 			final float xDiff = Math.abs(dx);
@@ -326,43 +326,40 @@ public class DragLinerLayout extends LinearLayout {
 				if (dy < 0) {// 向上推
 					if (-lp.topMargin < mHeaderHeight) {
 						//Log.i(TAG, "向上推，并且没推到头");
-						intercept = true;
+						willIntercept = true;
 					} else {
 						Log.i(TAG, "向上推，推到最上边了");
-						intercept = false;
+						willIntercept = false;
 						changeTouchEventToChild(ev);
 						return false;
 					}
 					
 				} else if (dy > 0) {// 向下拉
-					if (-lp.topMargin <= mHeaderHeight) {
+					if (-lp.topMargin <= mHeaderHeight && -lp.topMargin > 0) {
 						//Log.d(TAG, "向下拉，并且没拉到头");
 						if (!canScroll(this, false, (int) dy, (int) x, (int) y)) {
 							//Log.w(TAG, "向下拉，子View不能动");
 							changeTouchEventToMy(ev);
-							intercept = true;
+							willIntercept = true;
 						} else {
 							Log.i(TAG, "向下拉，子View可以滑动");
-							intercept = false;
+							willIntercept = false;
 						}
 					} else if (lp.topMargin == 0) {
 						Log.d(TAG, "向下拉，全部拉下来了");
-						intercept = false;
-						changeTouchEventToMy(ev);
-						//return false;
+						willIntercept = false;
 					} else {
-						//Log.d(TAG, "向下拉");
-						intercept = true;
+						willIntercept = true;
 					}
 				}
 				
-				if (!intercept) {
+				if (!willIntercept) {
 					mLastMotionX = x;
 					mLastMotionY = y;
 				}
 			}
 			
-			if (intercept) {
+			if (willIntercept) {
 				mIsBeingDragged = true;
 				setScrollState(SCROLL_STATE_DRAGGING);
 				mLastMotionX = x;
@@ -516,20 +513,22 @@ public class DragLinerLayout extends LinearLayout {
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
 		
-		Log.w(TAG, "+++onTouchEvent--->" + (ev.getAction()));
+		final int action = ev.getAction();
+		
+		Log.w(TAG, "+++onTouchEvent--->" + action);
 
 		if (getChildCount() < 1) {
 			return false;
 		}
 
-		if (ev.getAction() == MotionEvent.ACTION_DOWN && ev.getEdgeFlags() != 0) {
+		if (action == MotionEvent.ACTION_DOWN && ev.getEdgeFlags() != 0) {
 			// Don't handle edge touches immediately -- they may actually belong
 			// to one of our
 			// descendants.
 			return false;
 		}
 		
-		if (ev.getAction() == MotionEvent.ACTION_CANCEL) {
+		if (action == MotionEvent.ACTION_CANCEL) {
 			if (mIsBeingDragged) {
 				mActivePointerId = INVALID_POINTER;
 			}
@@ -541,7 +540,7 @@ public class DragLinerLayout extends LinearLayout {
 		}
 		mVelocityTracker.addMovement(ev);
 
-		final int action = ev.getAction();
+		
 		boolean needsInvalidate = false;
 
 		switch (action & MotionEventCompat.ACTION_MASK) {
