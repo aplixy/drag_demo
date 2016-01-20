@@ -700,6 +700,23 @@ public class DragLinerLayout extends LinearLayout {
 		mHandler.post(mAutoScrollRunnable);
 		
 	}
+	
+	public void scrollUp(){
+		LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
+		if (lp.topMargin == -mHeaderHeight) return;
+		
+		mAutoScrollRunnable.setIsUp(true);
+		mHandler.post(mAutoScrollRunnable);
+	}
+	
+	public void scrollDown(){
+		LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
+		if (lp.topMargin == 0) return;
+		
+		mAutoScrollRunnable.setIsUp(false);
+		mHandler.post(mAutoScrollRunnable);
+	}
+	
 
 	private void setScrollingCacheEnabled(boolean enabled) {
 		if (mScrollingCacheEnabled != enabled) {

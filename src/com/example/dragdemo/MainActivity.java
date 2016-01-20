@@ -7,18 +7,21 @@ import com.example.dragdemo.DragLinerLayout.OnSlideListener;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.LinearLayout.LayoutParams;
 
 public class MainActivity extends FragmentActivity {
 	
 	private static final String TAG = "MainActivity";
 	
-	private DragLinerLayout mCollapseHeaderLayout;
+	private DragLinerLayout mDragLinerLayout;
 	
 	private View mHeaderView;
 	private View mContentView;
@@ -26,6 +29,8 @@ public class MainActivity extends FragmentActivity {
 	private ViewPager mViewPager;
 	private List<MyFragment> mFragmentList;
 	private MyPagerAdapter mPagerAdapter;
+	
+	private OnScrollListener mOnScrollListener;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +43,7 @@ public class MainActivity extends FragmentActivity {
 	}
 
 	private void findViews() {
-		mCollapseHeaderLayout = (DragLinerLayout) findViewById(R.id.main_draglinerlayout_root);
+		mDragLinerLayout = (DragLinerLayout) findViewById(R.id.main_draglinerlayout_root);
 		
 		mHeaderView = LayoutInflater.from(this).inflate(R.layout.header_layout, null);
 		mContentView = LayoutInflater.from(this).inflate(R.layout.content_layout, null);
@@ -61,12 +66,12 @@ public class MainActivity extends FragmentActivity {
 		mViewPager.setAdapter(mPagerAdapter);
 		
 		
-		mCollapseHeaderLayout.addHeaderView(mHeaderView);
-		mCollapseHeaderLayout.addContentView(mContentView);
+		mDragLinerLayout.addHeaderView(mHeaderView);
+		mDragLinerLayout.addContentView(mContentView);
 	}
 
 	private void setListener() {
-		mCollapseHeaderLayout.setOnSlideListener(new OnSlideListener() {
+		mDragLinerLayout.setOnSlideListener(new OnSlideListener() {
 			
 			@Override
 			public void onSlideStart(DragLinerLayout layout) {
@@ -83,6 +88,30 @@ public class MainActivity extends FragmentActivity {
 				Log.w(TAG, "onAttachBottom");
 			}
 		});
+		
+		mOnScrollListener = new OnScrollListener() {
+			@Override
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+				if (firstVisibleItem == 0) mDragLinerLayout.scrollDown();
+			}
+		};
+		
+		new Handler().postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				for (MyFragment myFragment : mFragmentList) {
+					myFragment.setOnScrollListener(mOnScrollListener);
+				}
+			}
+		}, 500);
+		
 	}
 	
 }

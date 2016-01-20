@@ -6,15 +6,51 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
+import android.widget.ListView;
 
 public class MyFragment extends Fragment {
+	
+	private View mView;
+	private ListView mListView;
+	
 	
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater,
 			@Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		
+		mView = inflater.inflate(R.layout.fragment_one_day, null);
 		
-		return inflater.inflate(R.layout.fragment_one_day, null);
+		return mView;
 	}
+	
+	@Override
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onActivityCreated(savedInstanceState);
+		
+		findViews();
+		init();
+		setListener();
+	}
+
+	private void findViews() {
+		mListView = (ListView) mView.findViewById(R.id.listview1);
+	}
+
+	private void init() {
+		
+	}
+
+	private void setListener() {
+		
+	}
+	
+	public void setOnScrollListener(OnScrollListener l) {
+		mListView.setOnScrollListener(l);
+	}
+	
+	
 }
