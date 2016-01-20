@@ -248,12 +248,12 @@ public class DragLinerLayout extends LinearLayout {
 		int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
 		Log.v(TAG, "****dispatchTouchEvent--->" + action);
 		
-		if (action != MotionEvent.ACTION_DOWN) {
-			if (mIsChangedToChild) {
-				mContentViewGroup.dispatchTouchEvent(ev);
-				if (action != MotionEvent.ACTION_UP) return false;
-			}
-		}
+		//if (action != MotionEvent.ACTION_DOWN) {
+		//	if (mIsChangedToChild) {
+		//		mContentViewGroup.dispatchTouchEvent(ev);
+		//		if (action != MotionEvent.ACTION_UP) return false;
+		//	}
+		//}
 		
 		switch (action) {
 		case MotionEvent.ACTION_DOWN:
@@ -292,9 +292,11 @@ public class DragLinerLayout extends LinearLayout {
 					} else {
 						Log.i(TAG, "向上推，推到最上边了");
 						willIntercept = false;
-						changeTouchEventToChild(ev);
-						mIsChangedToMe = false;
-						return false;
+						if (!mIsChangedToChild) {
+							changeTouchEventToChild(ev);
+							mIsChangedToMe = false;
+							return false;
+						}
 					}
 					
 				} else if (dy > 0) {// 向下拉
@@ -334,6 +336,14 @@ public class DragLinerLayout extends LinearLayout {
 				mIsBeingDragged = false;
 			}
 			
+			if (mIsChangedToChild) {
+				mContentViewGroup.dispatchTouchEvent(ev);
+				return false;
+			}
+			
+			break;
+			
+		case MotionEvent.ACTION_CANCEL:
 			break;
 			
 		case MotionEventCompat.ACTION_POINTER_UP:
@@ -342,6 +352,11 @@ public class DragLinerLayout extends LinearLayout {
 
 		default:
 			Log.w(TAG, "****dispatchTouchEvent--->default");
+			
+			if (mIsChangedToChild) {
+				mContentViewGroup.dispatchTouchEvent(ev);
+			}
+			
 			Log.w(TAG, "-^-dispatch default置为false");
 			mIsBeingDragged = false;
 			mActivePointerId = INVALID_POINTER;
@@ -482,7 +497,7 @@ public class DragLinerLayout extends LinearLayout {
 		
 		if (action == MotionEvent.ACTION_CANCEL) {
 			if (mIsBeingDragged) {
-				mActivePointerId = INVALID_POINTER;
+				//mActivePointerId = INVALID_POINTER;
 			}
 			return false;
 		}
