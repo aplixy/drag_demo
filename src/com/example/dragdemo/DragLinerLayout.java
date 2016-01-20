@@ -126,7 +126,7 @@ public class DragLinerLayout extends LinearLayout {
 	private boolean mIsChangedToMe;
 	private boolean mIsChangedToChild;
 	
-	
+	private boolean mIsTouchDown;
 	
 	/**
 	 * Callback interface for responding to changing state of the selected page.
@@ -557,6 +557,8 @@ public class DragLinerLayout extends LinearLayout {
 					
 					// =====================向上推================
 					if (deltaY < 0) {
+						mIsTouchDown = false;
+						
 						// 还没完全推上去
 						if (-lp.topMargin < mHeaderHeight) {
 							lp.topMargin += deltaY;
@@ -572,6 +574,8 @@ public class DragLinerLayout extends LinearLayout {
 					} 
 					// =====================向下拉=================
 					else {
+						mIsTouchDown = true;
+						
 						// 还没完全拉下来
 						if (lp.topMargin < 0) {
 							lp.topMargin += deltaY;
@@ -656,7 +660,7 @@ public class DragLinerLayout extends LinearLayout {
 
 	private void endDrag(MotionEvent ev) {
 		
-		Log.d(TAG, ">>>>endDrag");
+		
 		
 		Log.w(TAG, "-^-end drag置为false");
 		mIsBeingDragged = false;
@@ -668,25 +672,32 @@ public class DragLinerLayout extends LinearLayout {
 		
 		
 		
-//		float deltaY = ev.getY() - mLastMotionY;
-//		
-//		LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
-//		
-//		if (deltaY > 0) {// 往下拉
+		//float deltaY = ev.getY() - mLastMotionY;
+		
+		//Log.d(TAG, ">>>>endDrag, deltaY--->" + deltaY);
+		
+		//LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
+		
+		//if (deltaY > 0) {// 往下拉
+		if (mIsTouchDown) {// 往下拉
 //			if (-lp.topMargin < 2 * mMinAutoScrollHeight) {
 //				mAutoScrollRunnable.setIsUp(false);
 //			} else {
 //				mAutoScrollRunnable.setIsUp(true);
 //			}
-//		} else {// 往上推
+			
+			mAutoScrollRunnable.setIsUp(false);
+		} else {// 往上推
 //			if (-lp.topMargin > mMinAutoScrollHeight) {
 //				mAutoScrollRunnable.setIsUp(true);
 //			} else {
 //				mAutoScrollRunnable.setIsUp(false);
 //			}
-//		}
-//		
-//		mHandler.post(mAutoScrollRunnable);
+			
+			mAutoScrollRunnable.setIsUp(true);
+		}
+		
+		mHandler.post(mAutoScrollRunnable);
 		
 	}
 
