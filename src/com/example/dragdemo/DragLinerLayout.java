@@ -314,7 +314,7 @@ public class DragLinerLayout extends LinearLayout {
 						}
 					} else if (lp.topMargin == 0) {
 						Log.d(TAG, "向下拉，全部拉下来了");
-						willIntercept = false;
+						willIntercept = true;
 					} else {
 						willIntercept = true;
 					}

@@ -15,7 +15,6 @@ public class MyFragment extends Fragment {
 	private View mView;
 	private ListView mListView;
 	
-	private OnScrollListener mOnScrollListener;
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater,
@@ -45,12 +44,7 @@ public class MyFragment extends Fragment {
 	}
 
 	private void setListener() {
-		if (mOnScrollListener != null) mListView.setOnScrollListener(mOnScrollListener);
-	}
-	
-	public void setOnScrollListener(OnScrollListener l) {
-		mOnScrollListener = l;
-		if (mListView != null) mListView.setOnScrollListener(mOnScrollListener);
+		
 	}
 	
 	

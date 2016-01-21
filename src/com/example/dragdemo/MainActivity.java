@@ -30,7 +30,6 @@ public class MainActivity extends FragmentActivity {
 	private List<MyFragment> mFragmentList;
 	private MyPagerAdapter mPagerAdapter;
 	
-	private OnScrollListener mOnScrollListener;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -88,34 +87,6 @@ public class MainActivity extends FragmentActivity {
 				Log.w(TAG, "onAttachBottom");
 			}
 		});
-		
-		mOnScrollListener = new OnScrollListener() {
-			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {
-				Log.d(TAG, "scrollState--->" + scrollState);
-				
-				int firstVisibleItem = view.getFirstVisiblePosition();
-				
-				Log.i(TAG, "firstVisibleItem--->" + firstVisibleItem);
-				
-				if (firstVisibleItem == 0 && scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
-					
-					Log.e(TAG, "scrollDown");
-					
-					mDragLinerLayout.scrollDown();
-				}
-			}
-			
-			@Override
-			public void onScroll(AbsListView view, int firstVisibleItem,
-					int visibleItemCount, int totalItemCount) {
-				
-			}
-		};
-		
-		for (MyFragment myFragment : mFragmentList) {
-			myFragment.setOnScrollListener(mOnScrollListener);
-		}
 		
 	}
 	
