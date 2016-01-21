@@ -799,7 +799,7 @@ public class DragLinerLayout extends LinearLayout {
 		public void run() {
 			LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 			
-			if (lp.topMargin == 0 || lp.topMargin == -mHeaderHeight) {
+			if (lp.topMargin == 0 && !mIsUp || lp.topMargin == -mHeaderHeight && mIsUp) {
 				if (mOnSlideListener != null) {
 					if (lp.topMargin == 0) {
 						mOnSlideListener.onAttachBottom(DragLinerLayout.this);

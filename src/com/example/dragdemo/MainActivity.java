@@ -92,25 +92,30 @@ public class MainActivity extends FragmentActivity {
 		mOnScrollListener = new OnScrollListener() {
 			@Override
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
-				// TODO Auto-generated method stub
+				Log.d(TAG, "scrollState--->" + scrollState);
 				
+				int firstVisibleItem = view.getFirstVisiblePosition();
+				
+				Log.i(TAG, "firstVisibleItem--->" + firstVisibleItem);
+				
+				if (firstVisibleItem == 0 && scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
+					
+					Log.e(TAG, "scrollDown");
+					
+					mDragLinerLayout.scrollDown();
+				}
 			}
 			
 			@Override
 			public void onScroll(AbsListView view, int firstVisibleItem,
 					int visibleItemCount, int totalItemCount) {
-				if (firstVisibleItem == 0) mDragLinerLayout.scrollDown();
+				
 			}
 		};
 		
-		new Handler().postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				for (MyFragment myFragment : mFragmentList) {
-					myFragment.setOnScrollListener(mOnScrollListener);
-				}
-			}
-		}, 500);
+		for (MyFragment myFragment : mFragmentList) {
+			myFragment.setOnScrollListener(mOnScrollListener);
+		}
 		
 	}
 	
