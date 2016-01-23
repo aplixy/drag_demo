@@ -3,7 +3,7 @@ package com.example.dragdemo;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.dragdemo.DragLinerLayout.OnSlideListener;
+import com.example.dragdemo.DragLinerLayout.OnDragHeadListener;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -70,23 +70,19 @@ public class MainActivity extends FragmentActivity {
 	}
 
 	private void setListener() {
-		mDragLinerLayout.setOnSlideListener(new OnSlideListener() {
-			
+		mDragLinerLayout.setOnDragHeadListener(new OnDragHeadListener() {
 			@Override
-			public void onSlideStart(DragLinerLayout layout) {
-				Log.d(TAG, "onSlideStart");
+			public void onDragStart(DragLinerLayout layout, boolean isMoveUp) {
+				Log.d(TAG, "onDragStart, isMoveUp--->" + isMoveUp);
 			}
 			
 			@Override
-			public void onAttachTop(DragLinerLayout layout) {
-				Log.i(TAG, "onAttachTop");
-			}
-			
-			@Override
-			public void onAttachBottom(DragLinerLayout layout) {
-				Log.w(TAG, "onAttachBottom");
+			public void onAttach(DragLinerLayout layout, boolean isAttachTop) {
+				Log.i(TAG, "onAttach, isAttachTop--->" + isAttachTop);
 			}
 		});
+		
+		
 		
 	}
 	

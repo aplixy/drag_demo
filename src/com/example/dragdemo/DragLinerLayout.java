@@ -85,7 +85,7 @@ public class DragLinerLayout extends LinearLayout {
 
 	private int mMaximumVelocity;
 
-	private OnSlideListener mOnSlideListener;
+	private OnDragHeadListener mOnDragHeadListener;
 
 	/**
 	 * Indicates that the pager is in an idle, settled state. The current page
@@ -131,13 +131,13 @@ public class DragLinerLayout extends LinearLayout {
 	/**
 	 * Callback interface for responding to changing state of the selected page.
 	 */
-	public interface OnSlideListener {
+	public interface OnDragHeadListener {
 
-		public void onSlideStart(DragLinerLayout layout);
+		public void onDragStart(DragLinerLayout layout, boolean isMoveUp);
 
-		public void onAttachTop(DragLinerLayout layout);
+		public void onAttach(DragLinerLayout layout, boolean isAttachTop);
 		
-		public void onAttachBottom(DragLinerLayout layout);
+		//public void onAttachBottom(DragLinerLayout layout);
 	}
 
 	public DragLinerLayout(Context context) {
@@ -201,13 +201,13 @@ public class DragLinerLayout extends LinearLayout {
 
 	/**
 	 * Set a listener that will be invoked whenever the page changes or is
-	 * incrementally scrolled. See {@link OnSlideListener}.
+	 * incrementally scrolled. See {@link OnDragHeadListener}.
 	 * 
 	 * @param listener
 	 *            Listener to set
 	 */
-	public void setOnSlideListener(OnSlideListener listener) {
-		mOnSlideListener = listener;
+	public void setOnDragHeadListener(OnDragHeadListener listener) {
+		mOnDragHeadListener = listener;
 	}
 
 	// We want the duration of the page snap animation to be influenced by the
@@ -565,6 +565,10 @@ public class DragLinerLayout extends LinearLayout {
 					if (deltaY < 0) {
 						mIsMoveDown = false;
 						
+						if (lp.topMargin == 0 && mOnDragHeadListener != null) {
+							mOnDragHeadListener.onDragStart(this, true);
+						}
+						
 						// 还没完全推上去
 						if (-lp.topMargin < mHeaderHeight) {
 							lp.topMargin += deltaY;
@@ -575,12 +579,20 @@ public class DragLinerLayout extends LinearLayout {
 						if (lp.topMargin == -mHeaderHeight) {
 							completeScroll();
 							mHeaderViewGroup.setLayoutParams(lp);
+							
+							if (mOnDragHeadListener != null) {
+								mOnDragHeadListener.onAttach(this, true);
+							}
 							return false;
 						}
 					} 
 					// =====================向下拉=================
 					else {
 						mIsMoveDown = true;
+						
+						if (lp.topMargin == -mHeaderHeight && mOnDragHeadListener != null) {
+							mOnDragHeadListener.onDragStart(this, false);
+						}
 						
 						// 还没完全拉下来
 						if (lp.topMargin < 0) {
@@ -592,6 +604,11 @@ public class DragLinerLayout extends LinearLayout {
 						if (lp.topMargin == 0) {
 							completeScroll();
 							mHeaderViewGroup.setLayoutParams(lp);
+							
+							if (mOnDragHeadListener != null) {
+								mOnDragHeadListener.onAttach(this, false);
+							}
+							
 							return false;
 						}
 					}
@@ -711,6 +728,10 @@ public class DragLinerLayout extends LinearLayout {
 		LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 		if (lp.topMargin == -mHeaderHeight) return;
 		
+		if (lp.topMargin == 0 && mOnDragHeadListener != null) {
+			mOnDragHeadListener.onDragStart(this, true);
+		}
+		
 		mAutoScrollRunnable.setIsUp(true);
 		mHandler.post(mAutoScrollRunnable);
 	}
@@ -718,6 +739,10 @@ public class DragLinerLayout extends LinearLayout {
 	public void scrollDown(){
 		LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 		if (lp.topMargin == 0) return;
+		
+		if (lp.topMargin == -mHeaderHeight && mOnDragHeadListener != null) {
+			mOnDragHeadListener.onDragStart(this, false);
+		}
 		
 		mAutoScrollRunnable.setIsUp(false);
 		mHandler.post(mAutoScrollRunnable);
@@ -806,11 +831,11 @@ public class DragLinerLayout extends LinearLayout {
 			LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 			
 			if (lp.topMargin == 0 && !mIsUp || lp.topMargin == -mHeaderHeight && mIsUp) {
-				if (mOnSlideListener != null) {
+				if (mOnDragHeadListener != null) {
 					if (lp.topMargin == 0) {
-						mOnSlideListener.onAttachBottom(DragLinerLayout.this);
+						mOnDragHeadListener.onAttach(DragLinerLayout.this, false);
 					} else {
-						mOnSlideListener.onAttachTop(DragLinerLayout.this);
+						mOnDragHeadListener.onAttach(DragLinerLayout.this, true);
 					}
 				}
 				
@@ -821,8 +846,8 @@ public class DragLinerLayout extends LinearLayout {
 					lp.topMargin -= AUTO_SCROLL_STEP;
 					if (-lp.topMargin >= mHeaderHeight) {
 						lp.topMargin = -mHeaderHeight;
-						if (mOnSlideListener != null) {
-							mOnSlideListener.onAttachTop(DragLinerLayout.this);
+						if (mOnDragHeadListener != null) {
+							mOnDragHeadListener.onAttach(DragLinerLayout.this, true);
 						}
 						mHandler.removeCallbacks(this);
 					} else {
@@ -833,8 +858,8 @@ public class DragLinerLayout extends LinearLayout {
 					if (lp.topMargin >= 0) {
 						lp.topMargin = 0;
 						
-						if (mOnSlideListener != null) {
-							mOnSlideListener.onAttachBottom(DragLinerLayout.this);
+						if (mOnDragHeadListener != null) {
+							mOnDragHeadListener.onAttach(DragLinerLayout.this, false);
 						}
 						
 						mHandler.removeCallbacks(this);
