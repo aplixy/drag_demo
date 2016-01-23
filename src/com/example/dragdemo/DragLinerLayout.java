@@ -126,7 +126,7 @@ public class DragLinerLayout extends LinearLayout {
 	private boolean mIsChangedToMe;
 	private boolean mIsChangedToChild;
 	
-	private boolean mIsTouchDown;
+	private boolean mIsMoveDown;
 	
 	/**
 	 * Callback interface for responding to changing state of the selected page.
@@ -277,7 +277,7 @@ public class DragLinerLayout extends LinearLayout {
 			final float dy = y - mLastMotionY;
 			final float yDiff = Math.abs(dy);
 			
-			//Log.v(TAG, "yDiff--->" + yDiff + ", xDiff--->" + xDiff);
+			Log.v(TAG, "yDiff--->" + yDiff + ", xDiff--->" + xDiff);
 			
 			boolean willIntercept = false;
 			
@@ -287,7 +287,10 @@ public class DragLinerLayout extends LinearLayout {
 				LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 				if (dy < 0) {// 向上推
 					if (-lp.topMargin < mHeaderHeight) {
-						//Log.i(TAG, "向上推，并且没推到头");
+						Log.i(TAG, "向上推，并且没推到头");
+						if (!mIsChangedToMe) {
+							changeTouchEventToMe(ev);
+						}
 						willIntercept = true;
 					} else {
 						Log.i(TAG, "向上推，推到最上边了");
@@ -314,14 +317,14 @@ public class DragLinerLayout extends LinearLayout {
 						}
 					} else if (lp.topMargin == 0) {
 						Log.d(TAG, "向下拉，全部拉下来了");
-						willIntercept = true;
+						willIntercept = false;
 					} else {
 						willIntercept = true;
 					}
 				}
 				
 				if (!willIntercept) {
-					mLastMotionX = x;
+					//mLastMotionX = x;
 					mLastMotionY = y;
 				}
 			}
@@ -329,17 +332,20 @@ public class DragLinerLayout extends LinearLayout {
 			if (willIntercept) {
 				Log.e(TAG, "-^-dispatch move置为true");
 				mIsBeingDragged = true;
-				mLastMotionX = x;
+				//mLastMotionY = y;
 				setScrollingCacheEnabled(true);
 			} else if (!mIsChangedToMe){
 				Log.w(TAG, "-^-dispatch move置为false");
 				mIsBeingDragged = false;
 			}
 			
+			Log.i(TAG, "****dispatchTouchEvent mIsChangedToChild--->" + mIsChangedToChild);
 			if (mIsChangedToChild) {
 				mContentViewGroup.dispatchTouchEvent(ev);
 				return false;
 			}
+			
+			mLastMotionX = x;
 			
 			break;
 			
@@ -388,7 +394,7 @@ public class DragLinerLayout extends LinearLayout {
 	}
 	
 	private void changeTouchEventToMe(MotionEvent ev) {
-		Log.d(TAG, "changeTouchEventToMe");
+		Log.e(TAG, "changeTouchEventToMe");
 		
 		MotionEvent event1 = MotionEvent.obtain(ev);
 		event1.setAction(MotionEvent.ACTION_CANCEL);
@@ -557,7 +563,7 @@ public class DragLinerLayout extends LinearLayout {
 					
 					// =====================向上推================
 					if (deltaY < 0) {
-						mIsTouchDown = false;
+						mIsMoveDown = false;
 						
 						// 还没完全推上去
 						if (-lp.topMargin < mHeaderHeight) {
@@ -574,7 +580,7 @@ public class DragLinerLayout extends LinearLayout {
 					} 
 					// =====================向下拉=================
 					else {
-						mIsTouchDown = true;
+						mIsMoveDown = true;
 						
 						// 还没完全拉下来
 						if (lp.topMargin < 0) {
@@ -679,7 +685,7 @@ public class DragLinerLayout extends LinearLayout {
 		//LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 		
 		//if (deltaY > 0) {// 往下拉
-		if (mIsTouchDown) {// 往下拉
+		if (mIsMoveDown) {// 往下拉
 //			if (-lp.topMargin < 2 * mMinAutoScrollHeight) {
 //				mAutoScrollRunnable.setIsUp(false);
 //			} else {
