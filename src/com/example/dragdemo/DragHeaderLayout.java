@@ -19,8 +19,8 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 
-public class DragLinerLayout extends LinearLayout {
-	private static final String TAG = "DragLinerLayout";
+public class DragHeaderLayout extends LinearLayout {
+	private static final String TAG = "DragHeaderLayout";
 
 	private static final boolean DEBUG = true;
 
@@ -133,19 +133,19 @@ public class DragLinerLayout extends LinearLayout {
 	 */
 	public interface OnDragHeadListener {
 
-		public void onDragStart(DragLinerLayout layout, boolean isMoveUp);
+		public void onDragStart(DragHeaderLayout layout, boolean isMoveUp);
 
-		public void onAttach(DragLinerLayout layout, boolean isAttachTop);
+		public void onAttach(DragHeaderLayout layout, boolean isAttachTop);
 		
 		//public void onAttachBottom(DragLinerLayout layout);
 	}
 
-	public DragLinerLayout(Context context) {
+	public DragHeaderLayout(Context context) {
 		super(context);
 		init();
 	}
 
-	public DragLinerLayout(Context context, AttributeSet attrs) {
+	public DragHeaderLayout(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
 	}
@@ -246,7 +246,7 @@ public class DragLinerLayout extends LinearLayout {
 		
 		
 		int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
-		Log.v(TAG, "****dispatchTouchEvent--->" + action);
+		//Log.v(TAG, "****dispatchTouchEvent--->" + action);
 		
 		//if (action != MotionEvent.ACTION_DOWN) {
 		//	if (mIsChangedToChild) {
@@ -257,13 +257,15 @@ public class DragLinerLayout extends LinearLayout {
 		
 		switch (action) {
 		case MotionEvent.ACTION_DOWN:
-			Log.d(TAG, "****dispatchTouchEvent--->ACTION_DOWN");
+			//Log.d(TAG, "****dispatchTouchEvent--->ACTION_DOWN");
 			
 			mHandler.removeCallbacks(mAutoScrollRunnable);
 			
 			mLastMotionX = ev.getX();
 			mLastMotionY = ev.getY();
 			mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
+			
+			Log.d(TAG, "****dispatchTouchEvent--->ACTION_DOWN, mActivePointerId--->" + mActivePointerId);
 
 			break;
 			
@@ -277,7 +279,7 @@ public class DragLinerLayout extends LinearLayout {
 			final float dy = y - mLastMotionY;
 			final float yDiff = Math.abs(dy);
 			
-			Log.v(TAG, "yDiff--->" + yDiff + ", xDiff--->" + xDiff);
+			//Log.v(TAG, "yDiff--->" + yDiff + ", xDiff--->" + xDiff);
 			
 			boolean willIntercept = false;
 			
@@ -287,13 +289,13 @@ public class DragLinerLayout extends LinearLayout {
 				LayoutParams lp = (LayoutParams) mHeaderViewGroup.getLayoutParams();
 				if (dy < 0) {// 向上推
 					if (-lp.topMargin < mHeaderHeight) {
-						Log.i(TAG, "向上推，并且没推到头");
+						//Log.i(TAG, "向上推，并且没推到头");
 						if (!mIsChangedToMe) {
 							changeTouchEventToMe(ev);
 						}
 						willIntercept = true;
 					} else {
-						Log.i(TAG, "向上推，推到最上边了");
+						//Log.i(TAG, "向上推，推到最上边了");
 						willIntercept = false;
 						if (!mIsChangedToChild) {
 							changeTouchEventToChild(ev);
@@ -306,7 +308,7 @@ public class DragLinerLayout extends LinearLayout {
 					if (-lp.topMargin <= mHeaderHeight && -lp.topMargin > 0) {
 						//Log.d(TAG, "向下拉，并且没拉到头");
 						if (canScroll(this, false, (int) dy, (int) x, (int) y)) {
-							Log.i(TAG, "向下拉，子View可以滑动");
+							//Log.i(TAG, "向下拉，子View可以滑动");
 							willIntercept = false;
 						} else {
 							//Log.w(TAG, "向下拉，子View不能动");
@@ -316,7 +318,7 @@ public class DragLinerLayout extends LinearLayout {
 							willIntercept = true;
 						}
 					} else if (lp.topMargin == 0) {
-						Log.d(TAG, "向下拉，全部拉下来了");
+						//Log.d(TAG, "向下拉，全部拉下来了");
 						willIntercept = false;
 					} else {
 						willIntercept = true;
@@ -330,16 +332,16 @@ public class DragLinerLayout extends LinearLayout {
 			}
 			
 			if (willIntercept) {
-				Log.e(TAG, "-^-dispatch move置为true");
+				//Log.e(TAG, "-^-dispatch move置为true");
 				mIsBeingDragged = true;
 				//mLastMotionY = y;
 				setScrollingCacheEnabled(true);
 			} else if (!mIsChangedToMe){
-				Log.w(TAG, "-^-dispatch move置为false");
+				//Log.w(TAG, "-^-dispatch move置为false");
 				mIsBeingDragged = false;
 			}
 			
-			Log.i(TAG, "****dispatchTouchEvent mIsChangedToChild--->" + mIsChangedToChild);
+			//Log.i(TAG, "****dispatchTouchEvent mIsChangedToChild--->" + mIsChangedToChild);
 			if (mIsChangedToChild) {
 				mContentViewGroup.dispatchTouchEvent(ev);
 				return false;
@@ -352,10 +354,21 @@ public class DragLinerLayout extends LinearLayout {
 		case MotionEvent.ACTION_CANCEL:
 			break;
 			
+		case MotionEventCompat.ACTION_POINTER_DOWN: {
+			final int index = MotionEventCompat.getActionIndex(ev);
+			final float y1 = MotionEventCompat.getY(ev, index);
+			mLastMotionY = y1;
+			mActivePointerId = MotionEventCompat.getPointerId(ev, index);
+			
+			Log.w(TAG, "****dispatchTouchEvent--->ACTION_POINTER_DOWN, mActivePointerId--->" + mActivePointerId);
+			
+			break;
+		}
+			
 		case MotionEventCompat.ACTION_POINTER_UP:
 			onSecondaryPointerUp(ev);
 			break;
-
+			
 		default:
 			Log.w(TAG, "****dispatchTouchEvent--->default");
 			
@@ -363,9 +376,13 @@ public class DragLinerLayout extends LinearLayout {
 				mContentViewGroup.dispatchTouchEvent(ev);
 			}
 			
-			Log.w(TAG, "-^-dispatch default置为false");
+			//Log.w(TAG, "-^-dispatch default置为false");
 			mIsBeingDragged = false;
 			mActivePointerId = INVALID_POINTER;
+			
+			Log.e(TAG, "action--->" + action);
+			Log.d(TAG, "****dispatchTouchEvent--->default, mActivePointerId--->" + mActivePointerId);
+			
 			if (mVelocityTracker != null) {
 				mVelocityTracker.recycle();
 				mVelocityTracker = null;
@@ -427,19 +444,22 @@ public class DragLinerLayout extends LinearLayout {
 
 		final int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
 		
-		Log.i(TAG, "###onInterceptTouchEvent--->" + action);
-		Log.v(TAG, "###onInterceptTouchEvent--->mIsBeingDragged--->" + mIsBeingDragged);
+		//Log.i(TAG, "###onInterceptTouchEvent--->" + action);
+		//Log.v(TAG, "###onInterceptTouchEvent--->mIsBeingDragged--->" + mIsBeingDragged);
 
 		// Always take care of the touch gesture being complete.
 		if (/*action == MotionEvent.ACTION_CANCEL || */action == MotionEvent.ACTION_UP) {
 			// Release the drag.
 			
-			Log.d(TAG, "###onInterceptTouchEvent--->Release the drag");
+			//Log.d(TAG, "###onInterceptTouchEvent--->Release the drag");
 			
 			Log.w(TAG, "-^-onIntercept UP置为false");
 			
 			mIsBeingDragged = false;
 			mActivePointerId = INVALID_POINTER;
+			
+			Log.i(TAG, "###onInterceptTouchEvent--->ACTION_UP, mActivePointerId--->" + mActivePointerId);
+			
 			if (mVelocityTracker != null) {
 				mVelocityTracker.recycle();
 				mVelocityTracker = null;
@@ -488,7 +508,7 @@ public class DragLinerLayout extends LinearLayout {
 		
 		final int action = ev.getAction();
 		
-		Log.w(TAG, "+++onTouchEvent--->" + action);
+		//Log.w(TAG, "+++onTouchEvent--->" + action);
 
 		if (getChildCount() < 1) {
 			return false;
@@ -527,6 +547,9 @@ public class DragLinerLayout extends LinearLayout {
 			// Remember where the motion event started
 			mLastMotionY = ev.getY();
 			mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
+			
+			Log.w(TAG, "+++onTouchEvent--->ACTION_DOWN, mActivePointerId--->" + mActivePointerId);
+			
 			break;
 		}
 		case MotionEvent.ACTION_MOVE:
@@ -622,6 +645,8 @@ public class DragLinerLayout extends LinearLayout {
 				final VelocityTracker velocityTracker = mVelocityTracker;
 				velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
 				mActivePointerId = INVALID_POINTER;
+				
+				Log.w(TAG, "+++onTouchEvent--->ACTION_UP, mActivePointerId--->" + mActivePointerId);
 			}
 			endDrag(ev);
 			break;
@@ -633,6 +658,9 @@ public class DragLinerLayout extends LinearLayout {
 			final float y = MotionEventCompat.getY(ev, index);
 			mLastMotionY = y;
 			mActivePointerId = MotionEventCompat.getPointerId(ev, index);
+			
+			Log.w(TAG, "+++onTouchEvent--->ACTION_POINTER_DOWN, mActivePointerId--->" + mActivePointerId);
+			
 			break;
 		}
 		case MotionEventCompat.ACTION_POINTER_UP:
@@ -675,6 +703,9 @@ public class DragLinerLayout extends LinearLayout {
 			final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
 			mLastMotionY = MotionEventCompat.getY(ev, newPointerIndex);
 			mActivePointerId = MotionEventCompat.getPointerId(ev, newPointerIndex);
+			
+			Log.w(TAG, "onSecondaryPointerUp, mActivePointerId--->" + mActivePointerId);
+			
 			if (mVelocityTracker != null) {
 				mVelocityTracker.clear();
 			}
@@ -833,9 +864,9 @@ public class DragLinerLayout extends LinearLayout {
 			if (lp.topMargin == 0 && !mIsUp || lp.topMargin == -mHeaderHeight && mIsUp) {
 				if (mOnDragHeadListener != null) {
 					if (lp.topMargin == 0) {
-						mOnDragHeadListener.onAttach(DragLinerLayout.this, false);
+						mOnDragHeadListener.onAttach(DragHeaderLayout.this, false);
 					} else {
-						mOnDragHeadListener.onAttach(DragLinerLayout.this, true);
+						mOnDragHeadListener.onAttach(DragHeaderLayout.this, true);
 					}
 				}
 				
@@ -847,7 +878,7 @@ public class DragLinerLayout extends LinearLayout {
 					if (-lp.topMargin >= mHeaderHeight) {
 						lp.topMargin = -mHeaderHeight;
 						if (mOnDragHeadListener != null) {
-							mOnDragHeadListener.onAttach(DragLinerLayout.this, true);
+							mOnDragHeadListener.onAttach(DragHeaderLayout.this, true);
 						}
 						mHandler.removeCallbacks(this);
 					} else {
@@ -859,7 +890,7 @@ public class DragLinerLayout extends LinearLayout {
 						lp.topMargin = 0;
 						
 						if (mOnDragHeadListener != null) {
-							mOnDragHeadListener.onAttach(DragLinerLayout.this, false);
+							mOnDragHeadListener.onAttach(DragHeaderLayout.this, false);
 						}
 						
 						mHandler.removeCallbacks(this);

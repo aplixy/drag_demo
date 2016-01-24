@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     tools:context="com.example.dragdemo.MainActivity" >
 
-    <com.example.dragdemo.DragLinerLayout
+    <com.example.dragdemo.DragHeaderLayout
         android:id="@+id/main_draglinerlayout_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
